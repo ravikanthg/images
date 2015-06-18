@@ -1,0 +1,241 @@
+Employee.java
+package com.jpa;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+
+@SuppressWarnings("serial")
+@Entity
+@Table(name="EMPLOYEE", schema="TEST")
+@NamedQuery(name="find employee by id", query="select e from Employee e where e.id = :id")
+public class Employee implements Serializable{
+
+	private Integer id;
+	private String name;
+	private Double salary;
+	private String designation;
+	
+	public Employee(Integer id, String name, Double salary, String designation){
+		this.id = id;
+		this.name = name;
+		this.salary = salary;
+		this.designation = designation;
+	}
+	
+	public Employee(){
+		
+	}
+
+	@Id
+	@Column(name="ID", length=38, nullable=false, updatable=false, unique=true)
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	@Column(name="NAME", length=250, updatable=true, unique=false)
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Column(name="SALARY", length=10, updatable=true, unique=false)
+	public Double getSalary() {
+		return salary;
+	}
+	public void setSalary(Double salary) {
+		this.salary = salary;
+	}
+
+	@Column(name="DESIGNATION", length=50, updatable=true, unique=false)
+	public String getDesignation() {
+		return designation;
+	}
+	public void setDesignation(String designation) {
+		this.designation = designation;
+	}
+	
+	@Override
+	public String toString() {
+		return "[name: "+this.name+", designation: "+this.designation+", salary: "+this.salary+"]";
+	}
+	
+}
+---------------EmployeeDao.java--------------
+package com.jpa;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
+public class EmployeeDao {
+
+	public static void main(String... args){
+		EmployeeDao dao = new EmployeeDao();
+		dao.createEmployees();
+	}
+
+	public void createEmployee(){
+//		JPA == <persistence-unit> name in persistence.xml file
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Employee employee = new Employee(1,"steven", 90000D, "SSE");
+		entityManager.getTransaction().begin();
+		entityManager.persist(employee);
+		entityManager.getTransaction().commit();
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	public void updateEmployee(){
+//		JPA == <persistence-unit> name in persistence.xml file
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Employee employee = entityManager.find(Employee.class, 1);
+		System.out.println("Employee before update: "+employee);
+		
+		entityManager.getTransaction().begin();
+		employee.setSalary(100000D);
+		entityManager.getTransaction().commit();
+		
+		employee = entityManager.find(Employee.class, 1);
+		System.out.println("Employee after update: "+employee);
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	public void createEmployees(){
+//		JPA == <persistence-unit> name in persistence.xml file
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Employee employee = null;
+		entityManager.getTransaction().begin();
+		for(int i=1;i<11;i++){
+			employee = new Employee(i, "steven"+i, new Double(i*25000), "SSE");
+			entityManager.persist(employee);
+		}
+		entityManager.getTransaction().commit();
+	}
+	
+	public void findEmployee(){
+//		JPA == <persistence-unit> name in persistence.xml file
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Employee employee = entityManager.find(Employee.class, 1);
+		System.out.println("Employee: "+employee);
+	}
+	
+	public void deleteEmployee(){
+//		JPA == <persistence-unit> name in persistence.xml file
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Employee employee = entityManager.find(Employee.class, 1);
+		entityManager.getTransaction().begin();
+		entityManager.remove(employee);
+		entityManager.getTransaction().commit();
+	}
+}
+-----------JPQLQueries.java-----------------
+package com.jpa;
+
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.Query;
+
+public class JPQLQueries {
+
+	public static void main(String... args){
+		JPQLQueries obj = new JPQLQueries();
+		obj.executeNamedQuery();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void namesInUpperCase(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		String queryString = "select upper(e.name) from Employee e order by e.id";
+		Query query = entityManager.createQuery(queryString);
+		List<String> list = query.getResultList();
+		for(String name: list){
+			System.out.println("Employee name: "+name);
+		}
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	public void minSalary(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		String queryString = "select min(e.salary) from Employee e";
+		Query query = entityManager.createQuery(queryString);
+		Double minSalary = (Double) query.getSingleResult();
+		System.out.println("min salary: "+minSalary);
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	public void maxSalary(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		String queryString = "select max(e.salary) from Employee e";
+		Query query = entityManager.createQuery(queryString);
+		Double maxSalary = (Double) query.getSingleResult();
+		System.out.println("max salary: "+maxSalary);
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void betweenSalary(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		String queryString = "select e.name, e.salary from Employee e where e.salary between 75000 and 175000";
+		Query query = entityManager.createQuery(queryString);
+		List<Object[]> list = query.getResultList();
+		for(Object[] record : list){
+			System.out.println("[name: "+record[0]+", salary: "+record[1]+"]");
+		}
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void likeName(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		String queryString = "select e from Employee e where e.name like 'ste%'";
+		Query query = entityManager.createQuery(queryString);
+		List<Employee> list = query.getResultList();
+		for(Employee employee: list){
+			System.out.println("name: "+employee);
+		}
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+	
+/**
+ * @see com.jpa.Employee for named query
+ */
+	public void executeNamedQuery(){
+		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("JPA");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		Query query = entityManager.createNamedQuery("find employee by id");
+		query.setParameter("id", 9);
+		Employee employee = (Employee) query.getSingleResult();
+		System.out.println(employee);
+		entityManager.close();
+		entityManagerFactory.close();
+	}
+}
