@@ -1,0 +1,24 @@
+NoClassDefFoundError - if .class file is not present at run time
+Solution - Because in application server we don't know where that war will be? So how to find out?
+		   Arrays.toString(((URLClassLoader) ClassLoaderParent.class.getClassLoader()).getURLs())
+		   (or)
+		   System.out.println(Arrays.toString(((URLClassLoader) ClassLoaderParent.class.getClassLoader()).getURLs()));
+above code returns the class path
+
+NoSuchMethodError - this happens if class loader loads wrong class version which may not contain specific method
+Variants - IncompatibleClassChangeError, AbstractMethodError, NoSuch(Method|Field)FoundError, ClassCastException, IllegalAccessError
+Solution - 1. ActiveUsers.class.getClassLoader().getResource(ActiveUsersCount.class.getName().replace(".", "/") + ".class")
+2. -verbse:class
+3. ClassLoader.getResource()
+
+ClassCastException - Every class will be identified uniquely by it's class name. If same class is loaded by 2 different class loaders then if we are trying to assign the object of class loaded by one class loader to class reference of same class loaded by another class loader then ClassCastException will come
+
+More than one class found:
+Variants: LinkageError (class loading constraints violated), ClassCastException, IllegalAccessError 
+java.lang.LinkageError - If we are creating object in one class loader and calling method on object in another class loader then LinkageError will come
+Help: -verbose:class, ClassLoader.getResource()
+----------------
+how to get heap dump on out of memory error: 
+1. -XX:+HeapDumpOnOutOfMemoryError
+	right click on class -> Run As -> Run Configurations -> Arguments -> add above value in VM arguments:
+2. Another way to see heap dump in eclipse -> Eclipse memory analyzer
